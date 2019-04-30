@@ -107,11 +107,7 @@ while True:
 
 		# initialize the set of information we'll be displaying on
 		# the frame
-         info = [
-	    	("Tracker", args["tracker"]),
-	    	("Success", "Yes" if success else "No"),
-	    	("FPS", "{:.2f}".format(fps.fps())),
-    	]
+        info = [("Tracker", args["tracker"]),("Success", "Yes" if success else "No"),("FPS", "{:.2f}".format(fps.fps()))]
 
 		# loop over the info tuples and draw them on our frame
     	for (i, (k, v)) in enumerate(info):
