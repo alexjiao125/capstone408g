@@ -1,3 +1,4 @@
+#uses pigpio library for software pwm
 from time import sleep
 import pigpio as pg
 
