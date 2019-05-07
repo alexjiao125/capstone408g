@@ -4,7 +4,6 @@ from imutils.video import FPS
 import argparse
 import imutils
 from imutils.video import VideoStream
-from imutils.video import FPS
 import time
 import cv2
 import numpy as np
@@ -26,18 +25,18 @@ if int(major) == 3 and int(minor) < 3:
 # otherwise, for OpenCV 3.3 OR NEWER, we need to explicity call the
 # approrpiate object tracker constructor:
 else:
-        # initialize a dictionary that maps strings to their corresponding
-        # OpenCV object tracker implementations
+    # initialize a dictionary that maps strings to their corresponding
+    # OpenCV object tracker implementations
         OPENCV_OBJECT_TRACKERS = {
-                "csrt": cv2.TrackerCSRT_create,
-                "kcf": cv2.TrackerKCF_create,
-                "boosting": cv2.TrackerBoosting_create,
-                "mil": cv2.TrackerMIL_create,
-                "tld": cv2.TrackerTLD_create,
-                "medianflow": cv2.TrackerMedianFlow_create,
-                "mosse": cv2.TrackerMOSSE_create
+            "csrt": cv2.TrackerCSRT_create,
+            "kcf": cv2.TrackerKCF_create,
+            "boosting": cv2.TrackerBoosting_create,
+            "mil": cv2.TrackerMIL_create,
+            "tld": cv2.TrackerTLD_create,
+            "medianflow": cv2.TrackerMedianFlow_create,
+            "mosse": cv2.TrackerMOSSE_create
         }
-
+    
         # grab the appropriate object tracker using our dictionary of
         # OpenCV object tracker objects
         tracker = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
@@ -54,7 +53,7 @@ if not args.get("video", False):
 
 # otherwise, grab a reference to the video file
 else:
-    vs = cv2.VideoCapture(args["video"])
+        vs = cv2.VideoCapture(args["video"])
 
 # initialize the FPS throughput estimator
 fps = None
@@ -66,32 +65,32 @@ hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 frame_count = 0;
 # loop over frames from the video stream
 while True:
-	if((frame_count % 6) == 0)
+        
         # grab the current frame, then handle if we are using a
         frame = vs.read()
         frame = cv2.flip(frame,0)
         frame = frame[1] if args.get("video", False) else frame
-
-        # check to see if we have reached the end of the stream
+        
+                # check to see if we have reached the end of the stream
         if frame is None:
                 break
-
-        # resize the frame (so we can process it faster) and grab the
-        # frame dimensions
-        frame = imutils.resize(frame, width=500)
-        (H, W) = frame.shape[:2]
-        #run HOG detector
-         
-        (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4), padding=(8, 8), scale=1.05)
-        
-        rects = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
-        pick = non_max_suppression(rects, overlapThresh=0.65)
-        areas = [np.abs((xB-xA)*(yB-yA)) for (xA, yA, xB, yB) in pick]
-        if (len(areas) > 0):
-            biggest_idx = np.argmax(areas)
-            (xA, yA, xB, yB) = pick[biggest_idx]
-            cv2.rectangle(frame, (xA,yA), (xB,yB), (0, 255, 0), 2)
-        # show the output frame
+        if((frame_count % 6) == 0):
+                # resize the frame (so we can process it faster) and grab the
+                # frame dimensions
+                frame = imutils.resize(frame, width=500)
+                (H, W) = frame.shape[:2]
+                #run HOG detector
+                 
+                (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4), padding=(8, 8), scale=1.05)
+                
+                rects = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+                pick = non_max_suppression(rects, overlapThresh=0.65)
+                areas = [np.abs((xB-xA)*(yB-yA)) for (xA, yA, xB, yB) in pick]
+                if (len(areas) > 0):
+                        biggest_idx = np.argmax(areas)
+                        (xA, yA, xB, yB) = pick[biggest_idx]
+                        cv2.rectangle(frame, (xA,yA), (xB,yB), (0, 255, 0), 2)
+                # show the output frame
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF
 
@@ -102,7 +101,7 @@ while True:
         # if the `q` key was pressed, break from the loop
         if key == ord("q"):
                 break
-	i = i+1
+        frame_count += 1
 # if we are using a webcam, release the pointer
 if not args.get("video", False):
         vs.stop()
@@ -112,6 +111,6 @@ else:
         vs.release()
 
 # close all windows
-camera.close()
+
 cv2.destroyAllWindows()
 
