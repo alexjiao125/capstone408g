@@ -63,8 +63,10 @@ fps = None
 hog = cv2.HOGDescriptor()
 hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
+frame_count = 0;
 # loop over frames from the video stream
 while True:
+	if((frame_count % 6) == 0)
         # grab the current frame, then handle if we are using a
         frame = vs.read()
         frame = cv2.flip(frame,0)
@@ -100,7 +102,7 @@ while True:
         # if the `q` key was pressed, break from the loop
         if key == ord("q"):
                 break
-
+	i = i+1
 # if we are using a webcam, release the pointer
 if not args.get("video", False):
         vs.stop()
