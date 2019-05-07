@@ -1,6 +1,16 @@
 from time import sleep
 import pigpio as pg
 
+scaleAngle = 0.08
+minErr = 60
+eXPrev = 0
+eYPrev = 0
+eXSum = 0
+eYSum = 0
+KP = 0.06
+KD = 0.03
+KI = 0.01
+
 def initGPIO():
     try:
         p = pg.pi()
@@ -18,24 +28,35 @@ def setServoAngle(pi, pin, angle):
     pw = (angle/18. + 3.)*200.-100.
     pi.set_servo_pulsewidth(pin, pw)
 	
-def updateAngle(servo, angleX, angleY, tarX, tarY):
-    scaleAngle = 1
+def updateAnglePID(servo, angleX, angleY, eX, eY):
+    global eXPrev, eYPrev, eXSum, eYSum
     assert angleX >= 30 and angleX <= 150
     assert angleY >= 30 and angleY <= 150
-    if tarX > 5 or tarX < -5:
-        angleX = angleX + round(scaleAngle*tarX)
+    if eX > minErr or eX < -minErr:
+        angleX += ((eX * KP) + (eXPrev * KD) + (eXSum * KI))*scaleAngle
         if angleX < 30:
             angleX = 30
         if angleX > 150:
             angleX = 150
-    if tarY > 5 or tarY < -5:
-        angleY = angleY + round(scaleAngle*tarX)
+    else:
+        eXPrev = 0
+        eXSum = 0
+    if eY > minErr or eY < -minErr:
+        angleY += ((eY * KP) + (eYPrev * KD) + (eYSum * KI))*scaleAngle
         if angleY < 30:
             angleY = 30
         if angleY > 150:
             angleY = 150
+    else:
+        eYPrev = 0
+        eYSum = 0
     setServoAngle(xtilt, angleX)
     setServoAngle(ytilt, angleY)
+    eXPrev = eX
+    eYPrev = eY
+    eXSum += eX
+    eYSum += eY
+
 if __name__ == '__main__':
 	import sys
 	if len(sys.argv) == 1:
