@@ -87,7 +87,7 @@ while True:
         areas = [np.abs((xB-xA)*(yB-yA)) for (xA, yA, xB, yB) in pick]
         if (len(areas) > 0):
             biggest_idx = np.argmax(areas)
-            (xA, yA, xB, yB) = picks[biggest_idx]
+            (xA, yA, xB, yB) = pick[biggest_idx]
             cv2.rectangle(frame, (xA,yA), (xB,yB), (0, 255, 0), 2)
         # show the output frame
         cv2.imshow("Frame", frame)
