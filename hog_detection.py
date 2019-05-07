@@ -7,6 +7,7 @@ from imutils.video import VideoStream
 from imutils.video import FPS
 import time
 import cv2
+import numpy as np
 
 from nms import non_max_suppression
 
@@ -84,9 +85,10 @@ while True:
         rects = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
         pick = non_max_suppression(rects, overlapThresh=0.65)
         areas = [np.abs((xB-xA)*(yB-yA)) for (xA, yA, xB, yB) in pick]
-        biggest_idx = np.argmax(areas)
-        (xA, yA, xB, yB) = picks[biggest_idx]
-        cv2.rectangle(frame, (xA,yA), (xB,yB), (0, 255, 0), 2)
+        if (len(areas) > 0):
+            biggest_idx = np.argmax(areas)
+            (xA, yA, xB, yB) = picks[biggest_idx]
+            cv2.rectangle(frame, (xA,yA), (xB,yB), (0, 255, 0), 2)
         # show the output frame
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF
