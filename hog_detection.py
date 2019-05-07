@@ -7,6 +7,10 @@ from imutils.video import VideoStream
 from imutils.video import FPS
 import time
 import cv2
+import numpy as np
+
+from nms import non_max_suppression
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", type=str,
         help="path to input video file")
@@ -55,6 +59,10 @@ else:
 # initialize the FPS throughput estimator
 fps = None
 
+#initialize HOG descriptor
+hog = cv2.HOGDescriptor()
+hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+
 # loop over frames from the video stream
 while True:
         # grab the current frame, then handle if we are using a
@@ -70,55 +78,27 @@ while True:
         # frame dimensions
         frame = imutils.resize(frame, width=500)
         (H, W) = frame.shape[:2]
-
-# loop over frames from the video stream
-
-        # check to see if we are currently tracking an object
-        if initBB is not None:
-                # grab the new bounding box coordinates of the object
-                (success, box) = tracker.update(frame)
-
-                # check to see if the tracking was a success
-                if success:
-                        (x, y, w, h) = [int(v) for v in box]
-                        cv2.rectangle(frame, (x, y), (x + w, y + h),
-                                (0, 255, 0), 2)
-
-                # update the FPS counter
-                fps.update()
-                fps.stop()
-
-                # initialize the set of information we'll be displaying on
-                # the frame
-                info = [
-                        ("Tracker", args["tracker"]),
-                        ("Success", "Yes" if success else "No"),
-                        ("FPS", "{:.2f}".format(fps.fps())),
-                ]
-                # loop over the info tuples and draw them on our frame
-                for (i, (k, v)) in enumerate(info):
-                        text = "{}: {}".format(k, v)
-                        cv2.putText(frame, text, (10, H - ((i * 20) + 20)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                        # show the output frame
+        #run HOG detector
+         
+        (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4), padding=(8, 8), scale=1.05)
+        
+        rects = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+        pick = non_max_suppression(rects, overlapThresh=0.65)
+        areas = [np.abs((xB-xA)*(yB-yA)) for (xA, yA, xB, yB) in pick]
+        if (len(areas) > 0):
+            biggest_idx = np.argmax(areas)
+            (xA, yA, xB, yB) = picks[biggest_idx]
+            cv2.rectangle(frame, (xA,yA), (xB,yB), (0, 255, 0), 2)
+        # show the output frame
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF
 
         # if the 's' key is selected, we are going to "select" a bounding
         # box to track
-        if key == ord("s"):
-                # select the bounding box of the object we want to track (make
-                # sure you press ENTER or SPACE after selecting the ROI)
-                initBB = cv2.selectROI("Frame", frame, fromCenter=False,
-                        showCrosshair=True)
-
-                # start OpenCV object tracker using the supplied bounding box
-                # coordinates, then start the FPS throughput estimator as well
-                tracker.init(frame, initBB)
-                fps = FPS().start()
+        fps = FPS().start()
 
         # if the `q` key was pressed, break from the loop
-        elif key == ord("q"):
+        if key == ord("q"):
                 break
 
 # if we are using a webcam, release the pointer
