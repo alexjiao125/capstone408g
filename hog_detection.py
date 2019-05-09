@@ -62,7 +62,7 @@ fps = None
 hog = cv2.HOGDescriptor()
 hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
-frame_count = 0;
+frame_count = 0
 # loop over frames from the video stream
 while True:
         
@@ -74,17 +74,18 @@ while True:
                 # check to see if we have reached the end of the stream
         if frame is None:
                 break
-        if((frame_count % 6) == 0):
+        if((frame_count % 30) == 0):
                 # resize the frame (so we can process it faster) and grab the
                 # frame dimensions
-                frame = imutils.resize(frame, width=500)
+                #frame = imutils.resize(frame, width=500)
                 (H, W) = frame.shape[:2]
                 #run HOG detector
                  
                 (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4), padding=(8, 8), scale=1.05)
                 
-                rects = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
-                pick = non_max_suppression(rects, overlapThresh=0.65)
+                #rects = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+                #pick = non_max_suppression(rects, overlapThresh=0.65)
+                pick = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
                 areas = [np.abs((xB-xA)*(yB-yA)) for (xA, yA, xB, yB) in pick]
                 if (len(areas) > 0):
                         biggest_idx = np.argmax(areas)

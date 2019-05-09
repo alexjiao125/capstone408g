@@ -12,6 +12,18 @@ KP = 0.06
 KD = 0.03
 KI = 0.01
 
+#These are the limits of the gimbal to protect the ribbon cable and servo
+#from damage. Last updated: 5/8/19
+xMin = 30
+xMax = 140
+yMin = 80
+yMax = 160
+
+#must initialize these two variables from python script.
+#ex: gpio_servo.xtilt = 17 and gpio_servo.ytilt = 27
+xtilt=0
+ytilt=0
+
 def initGPIO():
     try:
         p = pg.pi()
@@ -25,29 +37,41 @@ def setServoAngle(pi, pin, angle):
     pin: GPIO pin of servo
     angle: in degrees from 10 to 170
     '''
-    assert angle >=10 and angle <= 170
+    #ensure the pins for the servos have been initialized
+    assert xtilt > 0 and ytilt > 0
+    if(pin==xtilt):
+        if(angle > xMax):
+            angle = xMax
+        elif(angle < xMin):
+            angle = xMin
+    elif(pin==ytilt):
+        if(angle > yMax):
+            angle = yMax
+        elif(angle < yMin):
+            angle = yMin
+    else:
+        assert False, "you havent' initialized xtilt and ytilt pins on Rpi. Try: gpio_servo.xtilt = NUMBER for example"
     pw = (angle/18. + 3.)*200.-100.
     pi.set_servo_pulsewidth(pin, pw)
 	
-def updateAnglePID(servo, angleX, angleY, eX, eY):
+def updateAnglePID(servo, eX, eY):
+    assert xtilt > 0 and ytilt > 0, "ensure xtilt, ytilt have been set in gpio_servo.py module"
     global eXPrev, eYPrev, eXSum, eYSum
-    assert angleX >= 30 and angleX <= 150
-    assert angleY >= 30 and angleY <= 150
     if eX > minErr or eX < -minErr:
         angleX += ((eX * KP) + (eXPrev * KD) + (eXSum * KI))*scaleAngle
-        if angleX < 30:
-            angleX = 30
-        if angleX > 150:
-            angleX = 150
+        if angleX < xMin:
+            angleX = xMin
+        if angleX > xMax:
+            angleX = xMax
     else:
         eXPrev = 0
         eXSum = 0
     if eY > minErr or eY < -minErr:
         angleY += ((eY * KP) + (eYPrev * KD) + (eYSum * KI))*scaleAngle
-        if angleY < 30:
-            angleY = 30
-        if angleY > 150:
-            angleY = 150
+        if angleY < yMin:
+            angleY = yMin
+        if angleY > yMax:
+            angleY = yMax
     else:
         eYPrev = 0
         eYSum = 0
