@@ -7,6 +7,7 @@ from imutils.video import VideoStream
 from imutils.video import FPS
 import time
 import cv2
+import gpio_servo as servo
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", type=str,
         help="path to input video file")
@@ -41,10 +42,18 @@ else:
 # initialize the bounding box coordinates of the object we are going
 # to track
 initBB = None
+
+#initialize the pins to control the servos on the Rpi
+servo.xtilt = 17
+servo.ytilt = 27
+pi = servo.initGPIO()
+
+captureResolution = (1080,720)
+
 # if a video path was not supplied, grab the reference to the web cam
 if not args.get("video", False):
         print("[INFO] starting video stream...")
-        vs = VideoStream(usePiCamera=True).start()
+        vs = VideoStream(usePiCamera=True,resolution = captureResolution).start()
         time.sleep(2.0)
         
 
@@ -69,7 +78,7 @@ while True:
 
         # resize the frame (so we can process it faster) and grab the
         # frame dimensions
-        frame = imutils.resize(frame, width=500)
+        frame = imutils.resize(frame, width=600)
         (H, W) = frame.shape[:2]
 
 # loop over frames from the video stream
@@ -80,11 +89,18 @@ while True:
                 (success, box) = tracker.update(frame)
 
                 # check to see if the tracking was a success
+                #if so, obtain the center of the rectangle and move the gimbal accordingly
                 if success:
                         (x, y, w, h) = [int(v) for v in box]
                         cv2.rectangle(frame, (x, y), (x + w, y + h),
                                 (0, 255, 0), 2)
-
+                        cX = int((w/2)+x)
+                        cY = int((h/2)+y)
+                        originX = int(W/2)
+                        originY = int(H/2)
+                        angleX = (cX-originX)*(62.2/captureResolution[0])*(W/captureResolution[0])
+                        angleY = (cY-originY)*(48.8/captureResolution[1])*(H/captureResolution[1])
+                        servo.updateAnglePID(pi,angleX,angleY)
                 # update the FPS counter
                 fps.update()
                 fps.stop()
@@ -134,3 +150,8 @@ else:
 camera.close()
 cv2.destroyAllWindows()
 
+#Note: suppose the optional Resolution parameter in the vs.videoStream line was set to 64x64 pixels.
+#Then, let's say we do cv2.resize to width = 500. Then what you will see on the screen is a box that
+#takes up 500 columns of pixels on the monitor, but there are only 64 cubes, or blocks shown across those 500 columns.
+#I.e. the image appears very pixelated. What we're doing is only using 64x64 sensors from the camera and upsampling so that
+#those 64 pixels are shown across 500 columns.
