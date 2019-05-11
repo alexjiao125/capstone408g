@@ -1,6 +1,4 @@
 # import the necessary packages
-#from imutils.video import VideoStream
-from imutils.video import FPS
 import argparse
 import imutils
 from imutils.video import VideoStream
@@ -8,6 +6,7 @@ from imutils.video import FPS
 import time
 import cv2
 import gpio_servo as servo
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", type=str,
         help="path to input video file")
@@ -48,7 +47,9 @@ servo.xtilt = 17
 servo.ytilt = 27
 pi = servo.initGPIO()
 
-captureResolution = (1080,720)
+captureResolution = (300,200)
+degreesPerWidth = 62.2
+degreesPerHeight = 48.8
 
 # if a video path was not supplied, grab the reference to the web cam
 if not args.get("video", False):
@@ -98,9 +99,10 @@ while True:
                         cY = int((h/2)+y)
                         originX = int(W/2)
                         originY = int(H/2)
-                        angleX = (cX-originX)*(62.2/captureResolution[0])*(W/captureResolution[0])
-                        angleY = (cY-originY)*(48.8/captureResolution[1])*(H/captureResolution[1])
-                        servo.updateAnglePID(pi,angleX,angleY)
+                        errorX = (cX-originX)*(degreesPerWidth/W)
+                        errorY = (cY-originY)*(degreesPerHeight/H)
+                        print('error x: ',errorX,' error y: ', errorY)
+                        servo.updateAnglePID(pi,errorX,errorY)
                 # update the FPS counter
                 fps.update()
                 fps.stop()
@@ -147,7 +149,6 @@ else:
         vs.release()
 
 # close all windows
-camera.close()
 cv2.destroyAllWindows()
 
 #Note: suppose the optional Resolution parameter in the vs.videoStream line was set to 64x64 pixels.
