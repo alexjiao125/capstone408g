@@ -7,6 +7,7 @@ import time
 import cv2
 import gpio_servo as servo
 
+first_tracker = 1
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", type=str,
         help="path to input video file")
@@ -33,7 +34,7 @@ else:
                 "medianflow": cv2.TrackerMedianFlow_create,
                 "mosse": cv2.TrackerMOSSE_create
         }
-
+        first_tracker = 0
         # grab the appropriate object tracker using our dictionary of
         # OpenCV object tracker objects
         tracker = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
@@ -47,7 +48,7 @@ servo.xtilt = 17
 servo.ytilt = 27
 pi = servo.initGPIO()
 
-captureResolution = (300,200)
+captureResolution = (1024,512)
 degreesPerWidth = 62.2
 degreesPerHeight = 48.8
 
@@ -65,6 +66,11 @@ else:
 # initialize the FPS throughput estimator
 fps = None
 
+servo.lastTime = time.time()
+
+#flag to see if we are reselecting a frame a second time in MOSSE
+first = True
+
 # loop over frames from the video stream
 while True:
         # grab the current frame, then handle if we are using a
@@ -79,7 +85,7 @@ while True:
 
         # resize the frame (so we can process it faster) and grab the
         # frame dimensions
-        frame = imutils.resize(frame, width=600)
+        frame = imutils.resize(frame, width=512)
         (H, W) = frame.shape[:2]
 
 # loop over frames from the video stream
@@ -101,7 +107,10 @@ while True:
                         originY = int(H/2)
                         errorX = (cX-originX)*(degreesPerWidth/W)
                         errorY = (cY-originY)*(degreesPerHeight/H)
-                        print('error x: ',errorX,' error y: ', errorY)
+                        #print('error x: ',errorX,' error y: ', errorY)
+                        if(first): 
+                                servo.lastTime = time.time()
+                                first = False
                         servo.updateAnglePID(pi,errorX,errorY)
                 # update the FPS counter
                 fps.update()
@@ -130,10 +139,19 @@ while True:
                 # sure you press ENTER or SPACE after selecting the ROI)
                 initBB = cv2.selectROI("Frame", frame, fromCenter=False,
                         showCrosshair=True)
-
+                print("INIT BB:", initBB)
                 # start OpenCV object tracker using the supplied bounding box
                 # coordinates, then start the FPS throughput estimator as well
+                if(first_tracker):
+                        tracker = cv2.Tracker_create(args["tracker"].upper())
+                else:
+                        tracker = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
                 tracker.init(frame, initBB)
+                servo.eXSum = 0
+                servo.eYSum = 0
+                servo.eXPrev = 0
+                servo.eYPrev = 0
+                servo.lastTime = time.time()
                 fps = FPS().start()
 
         # if the `q` key was pressed, break from the loop
