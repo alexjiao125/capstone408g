@@ -30,3 +30,5 @@ this code:
   due to HOG being run which slows down the program.
 - At any point, press "q" to exit the program.
 
+Technical details of software or algorithms used can be found in the Final Report.
+

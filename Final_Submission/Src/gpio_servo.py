@@ -18,6 +18,7 @@ KIx =0.012 #0.0
 KIy =0.006 #0.0 
 lastTime = 0
 
+#global variables that are equal to the current servo angles
 angleX = 0
 angleY = 0
 
@@ -28,12 +29,17 @@ xMax = 155
 yMin = 90
 yMax = 160
 
-#must initialize these two variables from python script.
+#can initialize these two variables from python script.
 #ex: gpio_servo.xtilt = 17 and gpio_servo.ytilt = 27
 xtilt=17
 ytilt=27
 
 def initGPIO():
+    '''
+    connects to the pigpio daemon and initialzes the servos to their
+    starting angles
+    returns: an instance of pigpio.pi()
+    '''
     global xtilt, ytilt, angleX, angleY, lastTime
     try:
         pi = pg.pi()
@@ -47,6 +53,9 @@ def initGPIO():
 
 def setServoAngle(pi, pin, angle):
     '''
+    sets the angle of a servo
+    note: this should only be called by other functions in this file
+
     pi: pigpio.pi() object
     pin: GPIO pin of servo
     angle: in degrees from 10 to 170
@@ -71,6 +80,10 @@ def setServoAngle(pi, pin, angle):
     pi.set_servo_pulsewidth(pin, pw)
 	
 def updateAnglePID(servo, eX, eY):
+    '''
+    angle errors are passed here to be fed into the PID control loop
+    adjusts the servo angles based on PID output
+    '''
     assert xtilt > 0 and ytilt > 0, "ensure xtilt, ytilt have been set in gpio_servo.py module"
     global eXPrev, eYPrev, eXSum, eYSum, angleX, angleY, lastTime
     if eX > minErr or eX < -minErr:
