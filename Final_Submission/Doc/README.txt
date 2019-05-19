@@ -5,4 +5,5 @@ This directory contains all of our documentation and reports
   to assemble the case and gimbal mechanism
 - Final Presentation: the slide deck we presented to the class on May 14
 - Developers Notes: Notes on bugs and program structure.
+- Development Plan: A timeline of progress for our project.
 
