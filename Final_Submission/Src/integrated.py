@@ -1,3 +1,4 @@
+# Source code based on this reference: https://www.pyimagesearch.com/2018/07/30/opencv-object-tracking/
 # import the necessary packages
 import argparse
 import imutils
